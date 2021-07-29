@@ -1,9 +1,12 @@
+const mongoose = require('mongoose');
 const express = require('express');
 const passport = require('passport');
 const asyncHandler = require('express-async-handler');
 const controllerFactory = require('../controllers/controller.factory');
 
-function getRouter(model, schema, customRoutes = null) {
+function getRouter(modelName, schema, customRoutes = null) {
+
+    const model = mongoose.model(modelName);
 
     router = express.Router();
 
