@@ -3,7 +3,8 @@ const saveDocuments = require('./saveDocuments')
 
 if(process.argv[2] === '--i' || process.argv[2] === '--init') return;
 
-const directoryPath = '../../../assets/dataload/data'
+//const directoryPath = '../../../assets/dataload/data'
+const directoryPath = './assets/dataload/data'
 const callbackId = process.argv[2]
 const fileName = process.argv[3]
 
