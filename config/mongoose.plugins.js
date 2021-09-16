@@ -180,7 +180,7 @@ function globalPlugin(schema, options) {
         
         uniqueKeys.forEach( key => {
             delete dataWithOutUniqueKeys[key];
-            queryWithUniqueKeys[key] = obj[key] || null;
+            queryWithUniqueKeys[key] = obj[key] !== undefined? obj[key] : null;
         });
 
         if(obj._id && !(hasUniqueKeys && this.useUniqueKeys)) {
