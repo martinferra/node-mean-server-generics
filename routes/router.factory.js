@@ -20,6 +20,7 @@ function getRouter(modelName, schema, customRoutes = null) {
         findOneWrapperCb,
         findByIdWrapperCb, 
         saveWrapperCb, 
+        updateManyWrapperCb,
         removeWrapperCb, 
         removeByIdWrapperCb,
         countWrapperCb
@@ -30,6 +31,7 @@ function getRouter(modelName, schema, customRoutes = null) {
         findOneWrapperCb = customRoutes.findOneWrapperCb;
         findByIdWrapperCb = customRoutes.findByIdWrapperCb;
         saveWrapperCb = customRoutes.saveWrapperCb;
+        updateManyWrapperCb = customRoutes.updateManyWrapperCb,
         removeWrapperCb = customRoutes.removeWrapperCb;
         removeByIdWrapperCb = customRoutes.removeByIdWrapperCb;
         countWrapperCb = customRoutes.countWrapperCb;
@@ -40,6 +42,7 @@ function getRouter(modelName, schema, customRoutes = null) {
     router.route('/findOne').post(asyncHandler(getRtrFindOneFn(model, findOneWrapperCb)));
     router.route('/findById').post(asyncHandler(getRtrFindByIdFn(model, findByIdWrapperCb)));
     router.route('/save').post(asyncHandler(getRtrSaveFn(model, schema, saveWrapperCb)));
+    router.route('/updateMany').post(asyncHandler(getRtrUpdateManyFn(model, updateManyWrapperCb)));
     router.route('/remove').post(asyncHandler(getRtrRemoveFn(model, removeWrapperCb)));
     router.route('/removeById').post(asyncHandler(getRtrRemoveByIdFn(model, removeByIdWrapperCb)));
     router.route('/count').post(asyncHandler(getRtrCountFn(model, countWrapperCb)));
@@ -141,6 +144,20 @@ function getRtrSaveFn(model, schema, wrapperFn = null) {
     return async function save(req, res) {
         let data = await ctrlSaveFn(req.body);
         res.json(data);
+    }
+}
+
+function getRtrUpdateManyFn(model, wrapperFn = null) {
+
+    let ctrlUpdateManyDefaultFn = controllerFactory.getCtrlUpdateManyFn(model);
+
+    let ctrlUpdateManyFn = !wrapperFn? 
+        ctrlUpdateManyDefaultFn :
+        wrapperFn(ctrlUpdateManyDefaultFn);
+
+    return async function updateMany(req, res) {
+        let ret = await ctrlUpdateManyFn(req.body.query, req.body.data);
+        res.json(ret);
     }
 }
 

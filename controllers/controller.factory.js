@@ -150,6 +150,12 @@ function getCtrlSaveFn(model, schema) {
     }
 }
 
+function getCtrlUpdateManyFn(model) {
+    return async function updateMany(query, data) {
+        return await model.updateMany(query, data)
+    }
+}
+
 function getCtrlRemoveFn(model) {
     return async function remove(query) {
         return await model.deleteMany(query).exec();
@@ -174,6 +180,7 @@ module.exports = {
     getCtrlFindOneFn,
     getCtrlFindByIdFn,
     getCtrlSaveFn,
+    getCtrlUpdateManyFn,
     getCtrlRemoveFn,
     getCtrlRemoveByIdFn,
     getCtrlCountFn
