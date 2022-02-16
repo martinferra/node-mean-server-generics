@@ -1,15 +1,27 @@
 const ExcelJS = require('exceljs');
 const websocketCallbacks = require('../config/websocket-callbacks');
 
-var excelReportSpecs = new Map();
+var reportSpecs = new Map();
 
 function setReportSpec(reportId, reportSpec) {
-    excelReportSpecs.set(reportId, reportSpec);
+    reportSpecs.set(reportId, reportSpec);
 }
 
 async function getReport(cb, reportId, ...params) {
+    const spec = reportSpecs.get(reportId);
+    switch(spec.reportType) {
+        case 'excel':
+            return getExcelReport(cb, reportId, ...params);
+        case 'txt':
+            return getTxtReport(cb, reportId, ...params);
+        default:
+            cb(null, null);
+    }
+}
 
-    const spec = excelReportSpecs.get(reportId);
+async function getExcelReport(cb, reportId, ...params) {
+
+    const spec = reportSpecs.get(reportId);
     const getData = spec.getData;
     let buffer;
     let error = null;
@@ -44,6 +56,38 @@ async function getReport(cb, reportId, ...params) {
         }
     }
 };
+
+async function getTxtReport(cb, reportId, ...params) {
+    const spec = reportSpecs.get(reportId);
+    const getData = spec.getData;
+    let buffer;
+    let error = null;
+
+    try {
+        buffer = spec.columnIds.join('\t')+'\n';
+        let txtData = await getData(...params);
+        txtData.forEach((doc, idx)=>{
+            spec.columnIds.forEach((columnId, idx)=>{
+                buffer += doc[columnId];
+                if(idx<spec.columnIds.length-1) {
+                    buffer += '\t';
+                }
+            });
+            buffer += '\n';
+        });
+    } catch(e) {
+        error = e;
+    } finally {
+        if(cb) {
+            cb(error, error? null : buffer)
+        } else {
+            if(error) {
+                throw(error);
+            }
+            return buffer;
+        }
+    }
+}
 
 websocketCallbacks.setCallback('getReport', async (data, ws) => {
     let result;
