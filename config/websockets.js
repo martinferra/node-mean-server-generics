@@ -1,6 +1,5 @@
 const websocketCallbacks = require('./websocket-callbacks');
 const { Server } = require('ws');
-const { forEach } = require('lodash');
 
 var subscriptions = new Map();
 var wsPool = new Map();
@@ -94,7 +93,10 @@ function publish(key, data) {
     path = `${path}${path?'/':''}${step}`;
     let wsArr = subscriptions.get(path);
     if(wsArr) {
-      wsArr.forEach(ws=>ws.send(data))
+      if(typeof data === 'object') {
+        data = JSON.stringify(data);
+      }
+      wsArr.forEach(ws=>ws.send(data));
     }
   })
 }
