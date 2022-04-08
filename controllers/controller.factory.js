@@ -79,15 +79,15 @@ async function basicQueryFind(queryParams, createCb, postCb, cb) {
     }
 }
 
-function getCtrlFindFn(model) {
-    return async function find(queryParams, cb) {
+function getCtrlFindFn() {
+    return async function find(model, queryParams, cb) {
         return await basicQueryFind(queryParams, ()=>model.find(), null, cb);
     }
 }
 
-function getCtrlFindWithPaginationFn(model) {
+function getCtrlFindWithPaginationFn() {
 
-    return async function findWithPagination(params, createAggregationCb=null, postPipelineArr=[], cb=null) {
+    return async function findWithPagination(model, params, createAggregationCb=null, postPipelineArr=[], cb=null) {
 
         let sortField = params.pagParams.sort.field;
         let navDirection = params.pagParams.navDirection;
@@ -127,20 +127,20 @@ function getCtrlFindWithPaginationFn(model) {
     }
 }
 
-function getCtrlFindOneFn(model) {
-    return async function findOne(queryParams, cb) {
+function getCtrlFindOneFn() {
+    return async function findOne(model, queryParams, cb) {
         return await basicQueryFind(queryParams, ()=>model.findOne(), null, cb);
     }
 }
 
-function getCtrlFindByIdFn(model) {
-    return async function findById(id, queryParams, cb) {
+function getCtrlFindByIdFn() {
+    return async function findById(model, id, queryParams, cb) {
         return await basicQueryFind(queryParams, ()=>model.findById(id), null, cb);
     }
 }
 
-function getCtrlSaveFn(model, schema) {
-    return async function save(data) {
+function getCtrlSaveFn(schema) {
+    return async function save(model, data) {
         let validation = schema.validate(data);
         if(validation.error) {
             console.error(validation.error);
@@ -150,26 +150,26 @@ function getCtrlSaveFn(model, schema) {
     }
 }
 
-function getCtrlUpdateManyFn(model) {
-    return async function updateMany(query, data) {
+function getCtrlUpdateManyFn() {
+    return async function updateMany(model, query, data) {
         return await model.updateMany(query, data)
     }
 }
 
-function getCtrlRemoveFn(model) {
-    return async function remove(query) {
+function getCtrlRemoveFn() {
+    return async function remove(model, query) {
         return await model.deleteMany(query).exec();
     }
 }
 
-function getCtrlRemoveByIdFn(model) {
-    return async function removeById(id) {
+function getCtrlRemoveByIdFn() {
+    return async function removeById(model, id) {
         return await model.findByIdAndRemove(id).exec();
     }
 }
 
-function getCtrlCountFn(model) {
-    return async function count(queryParams, cb) {
+function getCtrlCountFn() {
+    return async function count(model, queryParams, cb) {
         return await model.find(queryParams.filter).count(cb);
     }
 }

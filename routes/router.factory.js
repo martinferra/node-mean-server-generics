@@ -1,13 +1,11 @@
-const mongoose = require('mongoose');
 const express = require('express');
 const passport = require('passport');
 const asyncHandler = require('express-async-handler');
 const controllerFactory = require('../controllers/controller.factory');
 const config = require('../../config/config');
+const modelFactory = require('../models/model.factory');
 
 function getRouter(modelName, schema, customRoutes = null) {
-
-    const model = mongoose.model(modelName);
 
     router = express.Router();
 
@@ -40,15 +38,15 @@ function getRouter(modelName, schema, customRoutes = null) {
         countWrapperCb = customRoutes.countWrapperCb;
     }
 
-    router.route('/find').post(asyncHandler(getRtrFindFn(model, findWrapperCb)));
-    router.route('/findWithPagination').post(asyncHandler(getRtrFindWithPaginationFn(model, findWithPaginationWrapperCb)));
-    router.route('/findOne').post(asyncHandler(getRtrFindOneFn(model, findOneWrapperCb)));
-    router.route('/findById').post(asyncHandler(getRtrFindByIdFn(model, findByIdWrapperCb)));
-    router.route('/save').post(asyncHandler(getRtrSaveFn(model, schema, saveWrapperCb)));
-    router.route('/updateMany').post(asyncHandler(getRtrUpdateManyFn(model, updateManyWrapperCb)));
-    router.route('/remove').post(asyncHandler(getRtrRemoveFn(model, removeWrapperCb)));
-    router.route('/removeById').post(asyncHandler(getRtrRemoveByIdFn(model, removeByIdWrapperCb)));
-    router.route('/count').post(asyncHandler(getRtrCountFn(model, countWrapperCb)));
+    router.route('/find/:discriminator?').post(asyncHandler(getRtrFindFn(modelName, findWrapperCb)));
+    router.route('/findWithPagination/:discriminator?').post(asyncHandler(getRtrFindWithPaginationFn(modelName, findWithPaginationWrapperCb)));
+    router.route('/findOne/:discriminator?').post(asyncHandler(getRtrFindOneFn(modelName, findOneWrapperCb)));
+    router.route('/findById/:discriminator?').post(asyncHandler(getRtrFindByIdFn(modelName, findByIdWrapperCb)));
+    router.route('/save/:discriminator?').post(asyncHandler(getRtrSaveFn(modelName, schema, saveWrapperCb)));
+    router.route('/updateMany/:discriminator?').post(asyncHandler(getRtrUpdateManyFn(modelName, updateManyWrapperCb)));
+    router.route('/remove/:discriminator?').post(asyncHandler(getRtrRemoveFn(modelName, removeWrapperCb)));
+    router.route('/removeById/:discriminator?').post(asyncHandler(getRtrRemoveByIdFn(modelName, removeByIdWrapperCb)));
+    router.route('/count/:discriminator?').post(asyncHandler(getRtrCountFn(modelName, countWrapperCb)));
 
     if(customRoutes && customRoutes.setCustomRoutes) { 
         customRoutes.setCustomRoutes(router)
@@ -57,17 +55,19 @@ function getRouter(modelName, schema, customRoutes = null) {
     return router;
 }
 
-function getRtrFindFn(model, wrapperFn = null) {
+function getRtrFindFn(modelName, wrapperFn = null) {
 
-    let ctrlFindDefaultFn = controllerFactory.getCtrlFindFn(model)
+    let ctrlFindDefaultFn = controllerFactory.getCtrlFindFn()
 
     let ctrlFindFn = !wrapperFn? 
         ctrlFindDefaultFn :
-        (params, cb) => wrapperFn(params, ctrlFindDefaultFn, cb)
+        (model, params, cb) => wrapperFn(model, params, ctrlFindDefaultFn, cb)
 
     return async function find(req, res) {
+
+        let model = modelFactory.getModel(modelName, req.params.discriminator);
    
-        await ctrlFindFn(req.body, (err, data) => {
+        await ctrlFindFn(model, req.body, (err, data) => {
             if(err) { 
                 console.error(err);
                 return err;
@@ -77,16 +77,19 @@ function getRtrFindFn(model, wrapperFn = null) {
     };
 }
 
-function getRtrFindWithPaginationFn(model, wrapperFn = null) {
+function getRtrFindWithPaginationFn(modelName, wrapperFn = null) {
 
-    let ctrlFindWithPaginationDefaultFn = controllerFactory.getCtrlFindWithPaginationFn(model);
+    let ctrlFindWithPaginationDefaultFn = controllerFactory.getCtrlFindWithPaginationFn();
 
     let ctrlFindWithPaginationFn = !wrapperFn? 
-        (params, cb) => ctrlFindWithPaginationDefaultFn(params, null, null, cb) :
+        (model, params, cb) => ctrlFindWithPaginationDefaultFn(model, params, null, null, cb) :
         wrapperFn(ctrlFindWithPaginationDefaultFn);
 
     return async function findWithPagination(req, res) {   
-        await ctrlFindWithPaginationFn(req.body, (err, data) => {
+
+        let model = modelFactory.getModel(modelName, req.params.discriminator);
+
+        await ctrlFindWithPaginationFn(model, req.body, (err, data) => {
             if(err) { 
                 console.error(err);
                 return err;
@@ -96,17 +99,19 @@ function getRtrFindWithPaginationFn(model, wrapperFn = null) {
     };
 }
 
-function getRtrFindOneFn(model, wrapperFn = null) {
+function getRtrFindOneFn(modelName, wrapperFn = null) {
 
-    let ctrlFindOneDefaultFn = controllerFactory.getCtrlFindOneFn(model);
+    let ctrlFindOneDefaultFn = controllerFactory.getCtrlFindOneFn();
 
     let ctrlFindOneFn = !wrapperFn? 
         ctrlFindOneDefaultFn :
         wrapperFn(ctrlFindOneDefaultFn)
 
     return async function findOne(req, res) {
+
+        let model = modelFactory.getModel(modelName, req.params.discriminator);
    
-        await ctrlFindOneFn(req.body, (err, data) => {
+        await ctrlFindOneFn(model, req.body, (err, data) => {
             if(err) { 
                 console.error(err);
                 return err;
@@ -116,17 +121,19 @@ function getRtrFindOneFn(model, wrapperFn = null) {
     };
 }
 
-function getRtrFindByIdFn(model, wrapperFn = null) {
+function getRtrFindByIdFn(modelName, wrapperFn = null) {
 
-    let ctrlFindByIdDefaultFn = controllerFactory.getCtrlFindByIdFn(model);
+    let ctrlFindByIdDefaultFn = controllerFactory.getCtrlFindByIdFn();
 
     let ctrlFindByIdFn = !wrapperFn? 
         ctrlFindByIdDefaultFn :
         wrapperFn(ctrlFindByIdDefaultFn)
 
     return async function findById(req, res) {
+
+        let model = modelFactory.getModel(modelName, req.params.discriminator);
     
-        await ctrlFindByIdFn(req.body.id, req.body, (err, data) => {
+        await ctrlFindByIdFn(model, req.body.id, req.body, (err, data) => {
             if(err) { 
                 console.error(err);
                 return err;
@@ -136,73 +143,87 @@ function getRtrFindByIdFn(model, wrapperFn = null) {
     };
 }
 
-function getRtrSaveFn(model, schema, wrapperFn = null) {
+function getRtrSaveFn(modelName, schema, wrapperFn = null) {
 
-    let ctrlSaveDefaultFn = controllerFactory.getCtrlSaveFn(model, schema);
+    let ctrlSaveDefaultFn = controllerFactory.getCtrlSaveFn(schema);
 
     let ctrlSaveFn = !wrapperFn? 
         ctrlSaveDefaultFn :
         wrapperFn(ctrlSaveDefaultFn);
 
     return async function save(req, res) {
-        let data = await ctrlSaveFn(req.body);
+
+        let model = modelFactory.getModel(modelName, req.params.discriminator);
+
+        let data = await ctrlSaveFn(model, req.body);
         res.json(data);
     }
 }
 
-function getRtrUpdateManyFn(model, wrapperFn = null) {
+function getRtrUpdateManyFn(modelName, wrapperFn = null) {
 
-    let ctrlUpdateManyDefaultFn = controllerFactory.getCtrlUpdateManyFn(model);
+    let ctrlUpdateManyDefaultFn = controllerFactory.getCtrlUpdateManyFn();
 
     let ctrlUpdateManyFn = !wrapperFn? 
         ctrlUpdateManyDefaultFn :
         wrapperFn(ctrlUpdateManyDefaultFn);
 
     return async function updateMany(req, res) {
-        let ret = await ctrlUpdateManyFn(req.body.query, req.body.data);
+
+        let model = modelFactory.getModel(modelName, req.params.discriminator);
+
+        let ret = await ctrlUpdateManyFn(model, req.body.query, req.body.data);
         res.json(ret);
     }
 }
 
-function getRtrRemoveFn(model, wrapperFn = null) {
+function getRtrRemoveFn(modelName, wrapperFn = null) {
 
-    let ctrlRemoveDefaultFn = controllerFactory.getCtrlRemoveFn(model);
+    let ctrlRemoveDefaultFn = controllerFactory.getCtrlRemoveFn();
 
     let ctrlRemoveFn = !wrapperFn? 
         ctrlRemoveDefaultFn :
         wrapperFn(ctrlRemoveDefaultFn);
 
     return async function remove(req, res) {
-        let data = await ctrlRemoveFn(req.body);
+
+        let model = modelFactory.getModel(modelName, req.params.discriminator);
+
+        let data = await ctrlRemoveFn(model, req.body);
         res.json(data);
     }
 }
 
-function getRtrRemoveByIdFn(model, wrapperFn = null) {
+function getRtrRemoveByIdFn(modelName, wrapperFn = null) {
 
-    let ctrlRemoveByIdDefaultFn = controllerFactory.getCtrlRemoveByIdFn(model);
+    let ctrlRemoveByIdDefaultFn = controllerFactory.getCtrlRemoveByIdFn();
 
     let ctrlRemoveByIdFn = !wrapperFn? 
         ctrlRemoveByIdDefaultFn :
         wrapperFn(ctrlRemoveByIdDefaultFn);
 
     return async function removeById(req, res) {
-        let data = await ctrlRemoveByIdFn(req.body.id);
+
+        let model = modelFactory.getModel(modelName, req.params.discriminator);
+
+        let data = await ctrlRemoveByIdFn(model, req.body.id);
         res.json(data);
     }
 }
 
-function getRtrCountFn(model, wrapperFn = null) {
+function getRtrCountFn(modelName, wrapperFn = null) {
 
-    let ctrlCountDefaultFn = controllerFactory.getCtrlCountFn(model);
+    let ctrlCountDefaultFn = controllerFactory.getCtrlCountFn();
 
     let ctrlCountFn = !wrapperFn? 
         ctrlCountDefaultFn :
         wrapperFn(ctrlCountDefaultFn)
 
     return async function count(req, res) {
+
+        let model = modelFactory.getModel(modelName, req.params.discriminator);
    
-        await ctrlCountFn(req.body, (err, data) => {
+        await ctrlCountFn(model, req.body, (err, data) => {
             if(err) { 
                 console.error(err);
                 return err;
