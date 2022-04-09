@@ -20,7 +20,7 @@ function getModel(name, discriminator) {
     } else {
         let schema = modelSchemas.get(name);
         if(schema) {
-            model = mongoose.model(fullName, schema);
+            model = mongoose.model(fullName, schema, fullName.toLowerCase());
             let modelPostCreationFn = modelPostCreation.get(name);
             if(modelPostCreationFn) {
                 modelPostCreation(model);
