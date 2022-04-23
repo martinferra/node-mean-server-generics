@@ -6,7 +6,7 @@ function setProccess(proccessId, proccess) {
     if(!proccesses.get(proccessId)) {
         proccesses.set(proccessId, proccess);
         if(_server) {
-            proccess(server);
+            (async () => proccess(_server))();
         }
     } else {
         throw(`Error: server-proccesses module -> setProccess -> proccessId "${proccessId}" already exists`);
@@ -21,7 +21,7 @@ function init(server) {
     if(server && !_server) {
         _server = server;
         proccesses.forEach(proccess=>{
-            proccess(_server);
+            (async () => proccess(_server))();
         })
     }
 }
