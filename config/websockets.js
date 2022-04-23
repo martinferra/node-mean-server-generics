@@ -94,7 +94,7 @@ function publish(key, data) {
     let wsArr = subscriptions.get(path);
     if(wsArr) {
       if(typeof data === 'object') {
-        data = JSON.stringify(data);
+        data = JSON.stringify({data: {key, data}});
       }
       wsArr.forEach(ws=>ws.send(data));
     }
