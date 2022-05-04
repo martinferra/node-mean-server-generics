@@ -1,8 +1,9 @@
 const websocketCallbacks = require('./websocket-callbacks');
 const { Server } = require('ws');
+const subscriptions = require('../config/subscriptions');
+const serverProcs = require('./server-proccesses');
 
-var subscriptions = new Map();
-var wsPool = new Map();
+var subscriptionsByWs = new Map();
 
 var wss;
 
@@ -15,19 +16,18 @@ function rpcController(rpc, ws) {
   };
 }
 
-function subscriptionController(key, ws) {
+function subscriptionController(path, ws) {
 
-  let subsArr = wsPool.get(ws) || [];
-  if(!subsArr.find(subs=>subs===key)) {
-    subsArr.push(key);
+  let callback = (data) => {
+    if(typeof data === 'object') {
+      data = JSON.stringify({data});
+    }
+    ws.send(data);
   }
-  wsPool.set(ws,subsArr);
 
-  let wsArr = subscriptions.get(key) || [];
-  if(!wsArr.find(_ws=>_ws===ws)) {
-    wsArr.push(ws);
-  }
-  subscriptions.set(key, wsArr);
+  subscriptionsByWs.set(ws,{path, callback});
+
+  subscriptions.subscribe(path, callback);
 }
 
 function keepAliveController(spec, ws) {
@@ -58,22 +58,11 @@ function messageController(message, ws) {
 }
 
 function closeController(ws) {
-  console.log('Client disconnected');
-  /* Es necesario eliminar de los maps todas las referencias al ws desconectado */
-  let subsArr = wsPool.get(ws);
-  if(subsArr) {
-    subsArr.forEach(subs => {
-      let wsArr = subscriptions.get(subs);
-      let idx = wsArr.findIndex(_ws=>_ws===ws);
-      if(idx>=0) {
-        wsArr.splice(idx,1);
-        if(!wsArr.length) {
-          subscriptions.delete(subs);
-        }
-      };
-    });
+  let subscription = subscriptionsByWs.get(ws);
+  if(subscription) {
+    subscriptions.unsubscribe(subscription.path, subscription.callback);
   };
-  wsPool.delete(ws);
+  subscriptionsByWs.delete(ws);
 }
 
 function init(server) {
@@ -86,19 +75,4 @@ function init(server) {
   });
 }
 
-function publish(key, data) {
-  let steps = key.split('/');
-  let path = '';
-  steps.forEach(step => {
-    path = `${path}${path?'/':''}${step}`;
-    let wsArr = subscriptions.get(path);
-    if(wsArr) {
-      if(typeof data === 'object') {
-        data = JSON.stringify({data: {key, data}});
-      }
-      wsArr.forEach(ws=>ws.send(data));
-    }
-  })
-}
-
-module.exports = {wss, init, publish};
+serverProcs.setProccess('websockets', init);
