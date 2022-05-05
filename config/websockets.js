@@ -7,12 +7,13 @@ var subscriptionsByWs = new Map();
 
 var wss;
 
-function rpcController(rpc, ws) {
+async function rpcController(rpc, ws) {
   let callback = websocketCallbacks.getCallback(rpc.name);
   if(!callback) {
     throw(`Error: websockets module -> on message callback -> command "${rpc.name}" doesn't exist`);
   } else {
-    callback(rpc.params, ws);
+    let ret = await callback(rpc.params);
+    ws.send(ret);
   };
 }
 

@@ -89,13 +89,11 @@ async function getTxtReport(cb, reportId, ...params) {
     }
 }
 
-websocketCallbacks.setCallback('getReport', async (data, ws) => {
-    let result;
+websocketCallbacks.setCallback('getReport', async (data) => {
     try {
-        result = await getReport(null, data.reportId, ...data.reportParams);
-        ws.send(result);
+        return await getReport(null, data.reportId, ...data.reportParams);
     } catch(e) {
-        ws.send(JSON.stringify({command: 'error', data:e}));
+        return JSON.stringify({command: 'error', data:e});
     }
 })
 
