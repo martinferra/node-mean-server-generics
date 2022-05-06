@@ -57,6 +57,10 @@ function subscribe(subsPath, cb) {
                     setSimetricRelationship(callbacksByPublishPath, publishPathsByCallback, publishPath, cb);
                 }
             })
+        } else {
+            publishPathsBySubsPath.get(subsPath)?.forEach((value, publishPath)=>{
+                setSimetricRelationship(callbacksByPublishPath, publishPathsByCallback, publishPath, cb);
+            })
         }
         setSimetricRelationship(callbacksBySubsPath, subsPathsByCallback, subsPath, cb);
     }
