@@ -20,7 +20,7 @@ function registerModelPostCreation(name, fn) {
 function addMiddlewareEntry(schema, method, pathTail) {
     schema.post(method, function (doc) {
         let path = doc.constructor.collection.name.replace('_','/')+'/'+pathTail;
-        subscriptions.publish(path, doc._doc);
+        subscriptions.publish(path, doc);
     });
 };
 
