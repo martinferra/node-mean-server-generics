@@ -13,7 +13,10 @@ async function rpcController(rpc, ws) {
     throw(`Error: websockets module -> on message callback -> command "${rpc.name}" doesn't exist`);
   } else {
     let ret = await callback(rpc.params);
-    ws.send(ret);
+    if(typeof ret !== 'string' && typeof ret !== 'Blob') {
+      ret = ret.toString();
+    }
+    ws. send(ret);
   };
 }
 
