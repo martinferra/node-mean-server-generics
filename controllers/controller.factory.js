@@ -22,14 +22,20 @@ async function basicAggregationFind(model, aggregationParams, createAggregationC
             countArr: [ {$count: 'count'} ]
         })
         .project({
-            documents: '$documents',
+            documents: '$documents', 
             count: {
-                $let: {
+              $cond: {
+                if: {$eq:[{$size:'$countArr'},0]}, 
+                then: 0, 
+                else: {
+                  $let: {
                     vars: {
-                        countObj: {$arrayElemAt:['$countArr',0]}
-                    },
+                      countObj: {$arrayElemAt: ['$countArr', 0]}
+                    }, 
                     in: '$$countObj.count'
+                  }
                 }
+              }
             }
         });
 
@@ -89,16 +95,16 @@ function getCtrlFindWithPaginationFn() {
 
     return async function findWithPagination(model, params, createAggregationCb=null, postPipelineArr=[], cb=null) {
 
-        let sortField = params.pagParams.sort.field;
-        let navDirection = params.pagParams.navDirection;
-        let firstSortDirection = (navDirection? navDirection : 1)*params.pagParams.sort.direction;
-        let secondSortDirection = params.pagParams.sort.direction;
+        let sortField = params.pagParams.sort.property;
+        let secondSortDirection = params.pagParams.sort.direction === 'asc'? 1 : 
+            (params.pagParams.sort.direction === 'desc'? -1 : 0)
+        let firstSortDirection = (params.pagParams.navDirection === 'left'? -1 : 1)*secondSortDirection;
         // El operador puede ser '$gt ó $lt'
         let sortOperator = `$${firstSortDirection===1? 'g' : 'l'}t`;
-        let lastValue = params.pagParams.sort.lastValue;
-        let lastId = params.pagParams.sort.lastId;
+        let lastValue = params.pagParams.sort.refValue;
+        let lastId = params.pagParams.sort.refId;
         let skipValue = params.pagParams.pageNumber && !(lastValue && lastId)? params.pagParams.pageNumber : 0;
-        let docsPerPage = params.pagParams.docsPerPage;
+        let pageSize = params.pagParams.pageSize;
 
         let paginationFilter = (lastValue && lastId)? { 
             '$or': [ 
@@ -118,8 +124,8 @@ function getCtrlFindWithPaginationFn() {
 
         paginationPipelineArr = paginationPipelineArr.concat([
             { $sort: { [sortField]: firstSortDirection, _id: firstSortDirection } },
-            { $skip: skipValue*docsPerPage },
-            { $limit: docsPerPage },
+            { $skip: skipValue*pageSize },
+            { $limit: pageSize },
             { $sort: { [sortField]: secondSortDirection, _id: secondSortDirection } }
         ], postPipelineArr);
         
