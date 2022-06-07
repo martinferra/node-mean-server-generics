@@ -22,25 +22,30 @@ async function getReport(cb, reportId, ...params) {
 async function getExcelReport(cb, reportId, ...params) {
 
     const spec = reportSpecs.get(reportId);
-    const getData = spec.getData;
     let buffer;
     let error = null;
 
     try {
-        let excelData = await getData(...params);
-
         const inputFilePath = spec.templateDir+spec.templateName+'.xlsx';
-
         const workbook = new ExcelJS.Workbook();
         await workbook.xlsx.readFile(inputFilePath);
-        const worksheet = workbook.getWorksheet(spec.sheetName);
 
-        excelData.forEach((doc, idx)=>{
-            Object.keys(doc).forEach(columnId=>{
-                worksheet.getCell(columnId+(spec.initialRowNum+idx)).value = doc[columnId]
-            })
-        });
-        
+        for(let sheet of spec.sheets) {
+            let getData = sheet.getData;
+            let excelData = await getData(...params);
+            const worksheet = workbook.getWorksheet(sheet.sheetName);
+
+            for(let param of sheet.params || []) {
+                worksheet.getCell(param.cell).value = param.getValue(...params);
+            }
+
+            excelData.forEach((doc, idx)=>{
+                Object.keys(doc).forEach(columnId=>{
+                    worksheet.getCell(columnId+(sheet.initialRowNum+idx)).value = doc[columnId]
+                })
+            });
+        };
+
         buffer = await workbook.xlsx.writeBuffer();
 
     } catch(e) {
