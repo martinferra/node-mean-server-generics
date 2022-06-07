@@ -14,7 +14,7 @@ async function rpcController(rpc, ws) {
   } else {
     let ret = await callback(rpc.params);
     if(ret.constructor.name === 'Object') {
-      ret = ret.toString();
+      ret = JSON.stringify(ret);
     }
     ws.send(ret);
   };
