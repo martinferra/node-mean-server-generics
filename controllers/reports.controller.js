@@ -36,7 +36,7 @@ async function getExcelReport(cb, reportId, ...params) {
             const worksheet = workbook.getWorksheet(sheet.sheetName);
 
             for(let param of sheet.params || []) {
-                worksheet.getCell(param.cell).value = param.getValue(...params);
+                worksheet.getCell(param.cell).value = await param.getValue(...params);
             }
 
             excelData.forEach((doc, idx)=>{
