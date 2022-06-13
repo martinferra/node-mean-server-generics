@@ -1,4 +1,6 @@
 const mongoose = require('mongoose');
+const commonFunctions = require('../../../common/generic/commonFunctions');
+const applyObjectIdRecursive = commonFunctions.applyObjectIdRecursive;
 
 async function basicAggregationFind(model, aggregationParams, createAggregationCb=null, postPipelineArr=null, cb=null) {
 
@@ -6,7 +8,10 @@ async function basicAggregationFind(model, aggregationParams, createAggregationC
         createAggregationCb(model, aggregationParams) : 
         model.aggregate();
 
-    if(aggregationParams.filter) aggregation = aggregation.match(aggregationParams.filter);
+    const filter = aggregationParams?.filterData?.ownFieldsFilter;
+    if(filter) {
+        aggregation = aggregation.match(applyObjectIdRecursive(filter));
+    }
     if(aggregationParams.projection) {
         /* Es necesario agregar en la proyección los 
         paths que luego se usarán para el populate */
@@ -127,7 +132,7 @@ function getCtrlFindWithPaginationFn() {
             { $skip: skipValue*pageSize },
             { $limit: pageSize },
             { $sort: { [sortField]: secondSortDirection, _id: secondSortDirection } }
-        ], postPipelineArr);
+        ], postPipelineArr || []);
         
         return await basicAggregationFind(model, params, createAggregationCb, paginationPipelineArr, cb);
     }
