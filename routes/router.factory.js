@@ -9,9 +9,7 @@ function getRouter(modelName, schema, customRoutes = null) {
 
     router = express.Router();
 
-    if(config.useHttpAuth) {
-        router.use(passport.authenticate('jwt', { session: false }))
-    }
+    router.use(passport.authenticate('jwt', { session: false }))
 
     /* Las funciones "Wrapper" cuando están definidas, tienen como 
     objetivo extender el comportamiento de las funciones estándar */
