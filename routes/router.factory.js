@@ -143,7 +143,7 @@ function getRtrFindByIdFn(modelName, wrapperFn) {
 
 function getRtrSaveFn(modelName, schema, wrapperFn) {
 
-    const ctrlSaveFn = wrapperFn?.(controllerFactory.getCtrlSaveFn())
+    const ctrlSaveFn = wrapperFn?.(controllerFactory.getCtrlSaveFn(schema))
         || controllerFactory.getCtrlSaveFn(schema); 
 
     return async function save(req, res) {
