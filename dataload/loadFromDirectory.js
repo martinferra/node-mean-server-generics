@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const getConfig = require('../../../assets/dataload/customParserFunctions');
 
-function loadFromDirectory(directoryPath, fileName, callbackId, forEachCb, finalCb, _options=null) {
+async function loadFromDirectory(directoryPath, fileName, callbackId, forEachCb, finalCb, _options=null) {
 
     const defaultOptions = {
         fileExtension: '.csv',
@@ -13,18 +13,18 @@ function loadFromDirectory(directoryPath, fileName, callbackId, forEachCb, final
 
     let fileNames = fileName? [ fileName ] : fs.readdirSync(directoryPath);
     fileNames.sort()
-    fileNames.forEach( fileName => {
+    for(fileName of fileNames) {
         const config = getConfig(fileName+'_'+(callbackId? callbackId : ''));
         let _forEachCb = config? config.forEachCb : null;
         let regExArr = config? config.regExArr : null;
         if(!_forEachCb) _forEachCb = forEachCb; 
         if(!options.fileExtension || path.extname(fileName) === options.fileExtension) {
-            parseFile(directoryPath+'/'+fileName, options, regExArr, _forEachCb, finalCb)
+            await parseFile(directoryPath+'/'+fileName, options, regExArr, _forEachCb, finalCb)
         }
-    })
+    }
 }
 
-function parseFile(filePath, options, regExArr, forEachCb, finalCb) {
+async function parseFile(filePath, options, regExArr, forEachCb, finalCb) {
 
     let fileName = path.basename(filePath);
     let fileNameArr = fileName.split('.');
@@ -32,9 +32,9 @@ function parseFile(filePath, options, regExArr, forEachCb, finalCb) {
     let skippedLinesFileName = `${fileNameArr[0]}.skipped`;
     let skippedLinesFilePath = `${path.dirname(filePath)}/${skippedLinesFileName}`
 
-    fs.readFile(filePath, 'utf8', function (err, data) {
+    fs.readFile(filePath, 'utf8', async function (err, data) {
         if(err) throw err;
-        let skippedData = stringToPlainObjects(data, options, regExArr, forEachCb, plainObjArr => {
+        let skippedData = await stringToPlainObjects(data, options, regExArr, forEachCb, plainObjArr => {
             finalCb(entityName, plainObjArr)
         })
         if(skippedData) {
@@ -43,7 +43,7 @@ function parseFile(filePath, options, regExArr, forEachCb, finalCb) {
     });
 }
 
-function stringToPlainObjects(objectsStr, options, regExArr, forEachCb, finalCb) {
+async function stringToPlainObjects(objectsStr, options, regExArr, forEachCb, finalCb) {
 
     let lines = objectsStr.split(options.rowDelimiter)
 
@@ -68,7 +68,7 @@ function stringToPlainObjects(objectsStr, options, regExArr, forEachCb, finalCb)
     let plainObjArr = [];
     let skippedLines = [];
 
-    lines.forEach( line => {
+    for(line of lines) {
         if(line.length) {
             let inputLineArr = line.split(options.fieldDelimiter);
             let lineOkArr = !regExArr? null : 
@@ -76,7 +76,7 @@ function stringToPlainObjects(objectsStr, options, regExArr, forEachCb, finalCb)
             let lineOk = !lineOkArr? true : lineOkArr.reduce((acc, curr) => acc && curr, true);
             if(lineOk) {
                 if(forEachCb) {
-                    let retValue = forEachCb(inputLineArr);
+                    let retValue = await forEachCb(inputLineArr);
                     if(!(retValue instanceof Array)) {
                         plainObjArr.push(retValue);
                     } else {
@@ -98,7 +98,7 @@ function stringToPlainObjects(objectsStr, options, regExArr, forEachCb, finalCb)
                 );
             }
         }
-    })
+    }
     finalCb(plainObjArr);
     return skippedLines.join('\n');
 }
