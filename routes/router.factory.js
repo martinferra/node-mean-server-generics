@@ -5,11 +5,20 @@ const controllerFactory = require('../controllers/controller.factory');
 const config = require('../../config/config');
 const modelFactory = require('../models/model.factory');
 
-function getRouter(modelName, schema, customRoutes = null) {
+function getRouter(modelName, schema, customRoutes = null, discByUser = false) {
 
     router = express.Router();
 
-    router.use(passport.authenticate('jwt', { session: false }))
+    /* Autenticación y seteo del atributo "user" en el objeto req */
+    router.use(passport.authenticate('jwt', { session: false }));
+
+    /* Seteo del atributo "discriminator" en el objeto req */
+    router.use('/*/:discriminator?', (req, res, next) => {
+        req.discriminator = (discByUser && req.user?._id)?
+            req.user._id.toString() : 
+            req.params.discriminator;
+        return next();
+    });
 
     /* Las funciones "Wrapper" cuando están definidas, tienen como 
     objetivo extender el comportamiento de las funciones estándar */
@@ -72,7 +81,7 @@ function getRtrFindFn(modelName, wrapperFn) {
 
     return async function find(req, res) {
 
-        const model = modelFactory.getModel(modelName, req.params.discriminator);
+        const model = modelFactory.getModel(modelName, req.discriminator);
 
         await ctrlFindFn(model, req.body, (err, data) => {
             if(err) { 
@@ -91,7 +100,7 @@ function getRtrFindWithPaginationFn(modelName, wrapperFn) {
 
     return async function findWithPagination(req, res) {   
 
-        let model = modelFactory.getModel(modelName, req.params.discriminator);
+        let model = modelFactory.getModel(modelName, req.discriminator);
 
         await ctrlFindWithPaginationFn(model, req.body, null, null, (err, data) => {
             if(err) { 
@@ -110,7 +119,7 @@ function getRtrFindOneFn(modelName, wrapperFn) {
 
     return async function findOne(req, res) {
 
-        let model = modelFactory.getModel(modelName, req.params.discriminator);
+        let model = modelFactory.getModel(modelName, req.discriminator);
    
         await ctrlFindOneFn(model, req.body, (err, data) => {
             if(err) { 
@@ -129,7 +138,7 @@ function getRtrFindByIdFn(modelName, wrapperFn) {
 
     return async function findById(req, res) {
 
-        let model = modelFactory.getModel(modelName, req.params.discriminator);
+        let model = modelFactory.getModel(modelName, req.discriminator);
     
         await ctrlFindByIdFn(model, req.body.id, req.body, (err, data) => {
             if(err) { 
@@ -148,7 +157,7 @@ function getRtrSaveFn(modelName, schema, wrapperFn) {
 
     return async function save(req, res) {
 
-        let model = modelFactory.getModel(modelName, req.params.discriminator);
+        let model = modelFactory.getModel(modelName, req.discriminator);
 
         let data = await ctrlSaveFn(model, req.body);
         res.json(data);
@@ -162,7 +171,7 @@ function getRtrUpdateManyFn(modelName, wrapperFn) {
 
     return async function updateMany(req, res) {
 
-        let model = modelFactory.getModel(modelName, req.params.discriminator);
+        let model = modelFactory.getModel(modelName, req.discriminator);
 
         let ret = await ctrlUpdateManyFn(model, req.body.query, req.body.data);
         res.json(ret);
@@ -176,7 +185,7 @@ function getRtrRemoveFn(modelName, wrapperFn) {
 
     return async function remove(req, res) {
 
-        let model = modelFactory.getModel(modelName, req.params.discriminator);
+        let model = modelFactory.getModel(modelName, req.discriminator);
 
         let data = await ctrlRemoveFn(model, req.body);
         res.json(data);
@@ -190,7 +199,7 @@ function getRtrRemoveByIdFn(modelName, wrapperFn) {
 
     return async function removeById(req, res) {
 
-        let model = modelFactory.getModel(modelName, req.params.discriminator);
+        let model = modelFactory.getModel(modelName, req.discriminator);
 
         let data = await ctrlRemoveByIdFn(model, req.body.id);
         res.json(data);
@@ -204,7 +213,7 @@ function getRtrCountFn(modelName, wrapperFn = null) {
 
     return async function count(req, res) {
 
-        let model = modelFactory.getModel(modelName, req.params.discriminator);
+        let model = modelFactory.getModel(modelName, req.discriminator);
    
         await ctrlCountFn(model, req.body, (err, data) => {
             if(err) { 
