@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
-const commonFunctions = require('../../../common/generic/commonFunctions');
-const applyObjectIdRecursive = commonFunctions.applyObjectIdRecursive;
+const commonFunctions = require('../../../server/generic/commonFunctions');
+const applyMongooseTypesRecursive = commonFunctions.applyMongooseTypesRecursive;
 
 async function basicAggregationFind(model, aggregationParams, createAggregationCb=null, postPipelineArr=null, cb=null) {
 
@@ -10,7 +10,7 @@ async function basicAggregationFind(model, aggregationParams, createAggregationC
 
     const filter = aggregationParams?.filterData?.ownFieldsFilter;
     if(filter) {
-        aggregation = aggregation.match(applyObjectIdRecursive(filter));
+        aggregation = aggregation.match(applyMongooseTypesRecursive(filter));
     }
     if(aggregationParams.projection) {
         /* Es necesario agregar en la proyección los 
@@ -70,7 +70,7 @@ async function basicQueryFind(queryParams, createCb, postCb, cb) {
 
     let query = createCb();
 
-    if(queryParams.filter) query.setQuery(queryParams.filter);
+    if(queryParams.filter) query.setQuery(applyMongooseTypesRecursive(queryParams.filter));
     if(queryParams.projection) query = query.select(queryParams.projection);
     if(queryParams.options) query = query.setOptions(queryParams.options);
 
@@ -169,7 +169,7 @@ function getCtrlUpdateManyFn() {
 
 function getCtrlRemoveFn() {
     return async function remove(model, query) {
-        return await model.deleteMany(query).exec();
+        return await model.deleteMany(applyMongooseTypesRecursive(query)).exec();
     }
 }
 
@@ -181,7 +181,7 @@ function getCtrlRemoveByIdFn() {
 
 function getCtrlCountFn() {
     return async function count(model, queryParams, cb) {
-        return await model.find(queryParams.filter).count(cb);
+        return await model.find(applyMongooseTypesRecursive(queryParams.filter)).count(cb);
     }
 }
 

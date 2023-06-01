@@ -1,18 +1,20 @@
+const config = require('../../config/config');
 const websocketCallbacks = require('./websocket-callbacks');
 const { Server } = require('ws');
 const subscriptions = require('../config/subscriptions');
 const serverProcs = require('./server-proccesses');
+const jwt = require('jsonwebtoken');
 
 var subscriptionsByWs = new Map();
 
 var wss;
 
-async function rpcController(rpc, ws) {
+async function rpcController(user, rpc, ws) {
   let callback = websocketCallbacks.getCallback(rpc.name);
   if(!callback) {
     throw(`Error: websockets module -> on message callback -> command "${rpc.name}" doesn't exist`);
   } else {
-    let ret = await callback(rpc.params);
+    let ret = await callback(Object.assign(rpc.params,{user}));
     if(ret.constructor.name === 'Object') {
       ret = JSON.stringify(ret);
     }
@@ -20,7 +22,7 @@ async function rpcController(rpc, ws) {
   };
 }
 
-function subscriptionController(path, ws) {
+function subscriptionController(user, path, ws) {
 
   let callback = (data) => {
     if(typeof data === 'object') {
@@ -34,29 +36,28 @@ function subscriptionController(path, ws) {
   subscriptions.subscribe(path, callback);
 }
 
-function keepAliveController(spec, ws) {
+function keepAliveController(user, spec, ws) {
   console.log('keepAlive');
   const timeOut = spec.timeOut || 30000;
   setTimeout(()=>{
-    sendKeepAlive(ws, timeOut);
+    sendKeepAlive(user, ws, timeOut);
   }, timeOut);
 }
 
-function sendKeepAlive(ws, timeOut) {
+function sendKeepAlive(user, ws, timeOut) {
   ws.send(JSON.stringify({type: 'keepAlive', data:{timeOut}}));
 }
 
-function messageController(message, ws) {
-  let incomingMessage = JSON.parse(message);
+function messageController(user, incomingMessage, ws) {
   switch(incomingMessage.type) {
     case 'rpc':
-      rpcController(incomingMessage.spec, ws);
+      rpcController(user, incomingMessage.spec, ws);
       break;
     case 'subscription':
-      subscriptionController(incomingMessage.spec, ws);
+      subscriptionController(user, incomingMessage.spec, ws);
       break;
     case 'keepAlive':
-      keepAliveController(incomingMessage.spec, ws);
+      keepAliveController(user, incomingMessage.spec, ws);
       break;
   }
 }
@@ -72,10 +73,19 @@ function closeController(ws) {
 function init(server) {
   wss = new Server({ server: server });
   wss.on('connection', (ws) => {
+    var user;
     console.log('Client connected');
-    ws.on('message', (message) => messageController(message, ws));
+    ws.on('message', (message) => {
+      let incomingMessage = JSON.parse(message);
+      user ??= jwt.verify(incomingMessage.token, config.jwtSecret);
+      if(!user) {
+        ws.close(1, 'Access denied');
+      } else {
+        messageController(user, incomingMessage, ws);
+      }
+    });
     ws.on('close', () => closeController(ws));
-    sendKeepAlive(ws, 30000);
+    sendKeepAlive(user, ws, 30000);
   });
 }
 

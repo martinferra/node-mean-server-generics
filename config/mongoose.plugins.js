@@ -14,7 +14,7 @@ function saveChildrenForArrayInvoker(schema, objArr) {
                                 )
 }
 
-function saveDocumentInvokker(modelClassName, obj) {
+function saveDocumentInvoker(modelClassName, obj) {
 
     if(!obj || typeof obj === 'string' || obj.constructor.name === 'ObjectID') return cb => cb(null, obj)
 
@@ -28,13 +28,13 @@ function saveDocumentInvokker(modelClassName, obj) {
     const modelClass = mongoose.model(modelClassName);
     return cb => modelClass.saveDocument(obj, async (err, doc) => {
         if(err) {
-            console.error(new Error(`saveDocumentInvokker outer error, obj: ${obj}, modelClassName: ${modelClassName}`))
+            console.error(new Error(`saveDocumentInvoker outer error, obj: ${obj}, modelClassName: ${modelClassName}`))
             console.error(err)
             cb(err, null)
             return
         }
         if(!doc) {
-            let innerErr = new Error(`saveDocumentInvokker inner error, "doc" is undefined, obj: ${obj}, modelClassName: ${modelClassName}`)
+            let innerErr = new Error(`saveDocumentInvoker inner error, "doc" is undefined, obj: ${obj}, modelClassName: ${modelClassName}`)
             console.error(innerErr)
             cb(innerErr, doc)
             return
@@ -44,10 +44,10 @@ function saveDocumentInvokker(modelClassName, obj) {
     })
 }
 
-function saveDocumentArrayInvokker(modelClassName, objArr) {
+function saveDocumentArrayInvoker(modelClassName, objArr) {
     return !objArr? cb => cb(null, null) : 
                     cb => async.parallel( 
-                                    objArr.map( obj => saveDocumentInvokker(modelClassName, obj) ), 
+                                    objArr.map( obj => saveDocumentInvoker(modelClassName, obj) ), 
                                     (err, objArrRes)=>cb(err, objArrRes)
                                 )
 }
@@ -80,8 +80,11 @@ function globalPlugin(schema, options) {
                     switch(this.paths[path].constructor.name) {
                         case 'SingleNestedPath': fnObj[path] = saveChildrenInvoker(this.paths[path].schema, obj[path]); break;
                         case 'DocumentArrayPath': fnObj[path] = saveChildrenForArrayInvoker(this.paths[path].schema, obj[path]); break;
-                        case 'ObjectId': fnObj[path] = saveDocumentInvokker(this.tree[path].ref, obj[path]); break;
-                        case 'SchemaArray': fnObj[path] = saveDocumentArrayInvokker(this.tree[path][0].ref, obj[path]); break;
+                        case 'ObjectId': fnObj[path] = saveDocumentInvoker(this.tree[path].ref, obj[path]); break;
+                        case 'SchemaArray': fnObj[path] = this.tree[path]?.[0]?.ref?
+                                saveDocumentArrayInvoker(this.tree[path][0].ref, obj[path]) :
+                                identityFnInvoker(obj[path]);
+                            break;
                         default: fnObj[path] = identityFnInvoker(obj[path]); break;
                     }
                 }

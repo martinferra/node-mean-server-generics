@@ -42,7 +42,7 @@ function getModel(name, discriminator) {
             model = mongoose.model(fullName, schema, discriminator? fullName.toLowerCase(): undefined);
             let modelPostCreationFn = modelPostCreation.get(name);
             if(modelPostCreationFn) {
-                modelPostCreation(model);
+                modelPostCreationFn(model);
             }
         } else {
             throw new Error(`Model schema doesn't exist for model name '${name}'`);
