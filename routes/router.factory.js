@@ -13,10 +13,14 @@ function getRouter(modelName, schema, customRoutes = null, discByUser = false) {
     router.use(passport.authenticate('jwt', { session: false }));
 
     /* Seteo del atributo "discriminator" en el objeto req */
-    router.use('/*/:discriminator?', (req, res, next) => {
-        req.discriminator = (discByUser && req.user?._id)?
-            req.user._id.toString() : 
-            req.params.discriminator;
+    router.use('/*/:discriminator', (req, res, next) => {
+        req.discriminator = req.params.discriminator;
+        return next();
+    });
+    router.use('/*/', (req, res, next) => {
+        if((discByUser && req.user?._id)) {
+            req.discriminator = req.user._id.toString();
+        }
         return next();
     });
 
