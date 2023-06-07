@@ -116,8 +116,13 @@ function globalPlugin(schema, options) {
                 return obj
             }
 
-            if(obj.__t && obj.__t !== this.modelName) {
-                let model = mongoose.models[obj.__t]
+            if(
+                obj.__t && 
+                !this.modelName.endsWith(obj.__t) && 
+                obj.__t !== this.modelName
+            ) {
+                let model = mongoose.models[this.modelName+':'+obj.__t] || 
+                    mongoose.models[obj.__t]
                 savedDoc = await model.saveDocument(obj, null)
                 if(cb) {
                     cb(null, savedDoc)

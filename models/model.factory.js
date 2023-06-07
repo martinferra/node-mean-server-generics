@@ -17,6 +17,12 @@ function registerModelPostCreation(name, fn) {
     modelPostCreation.set(name, fn)
 }
 
+function registerModelDiscriminator(name, schema, discriminator) {
+    modelPostCreation.set(name, function postCreation(model) {
+        model.discriminator(model.modelName+':'+discriminator, schema, discriminator);
+    });
+}
+
 function addMiddlewareEntry(schema, method, pathTail) {
     schema.post(method, function (doc) {
         let path = doc.constructor.collection.name.replace('_','/')+'/'+pathTail;
@@ -51,4 +57,9 @@ function getModel(name, discriminator) {
     return model;
 }
 
-module.exports = { registerModelSchema, registerModelPostCreation, getModel }
+module.exports = {
+    registerModelSchema, 
+    registerModelPostCreation, 
+    registerModelDiscriminator,
+    getModel
+}
