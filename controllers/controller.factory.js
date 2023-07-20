@@ -83,7 +83,7 @@ async function basicQueryFind(queryParams, createCb, postCb, cb) {
     if(postCb) query = postCb(query);
 
     if(cb) {
-        query.exec(cb);
+        query.exec().then(data=>cb(null, data));
         return;
     } else {
         return await query.exec();
@@ -116,7 +116,7 @@ function getCtrlFindWithPaginationFn() {
                 { [sortField]: { [sortOperator]: lastValue } }, 
                 {
                     [sortField]: lastValue, 
-                    '_id': { [sortOperator]: mongoose.Types.ObjectId(lastId) } 
+                    '_id': { [sortOperator]: new mongoose.Types.ObjectId(lastId) } 
                 } 
             ] 
         } : null;

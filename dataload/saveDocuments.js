@@ -5,11 +5,7 @@ const config = require('../../config/config');
 
 const mongoUri = config.mongo.host;
 
-mongoose.set('useUnifiedTopology', true);
-mongoose.set('useFindAndModify', false);
 mongoose.connect(mongoUri, { 
-    keepAlive: true, useNewUrlParser: true, 
-    useCreateIndex: true, 
     socketTimeoutMS: 1800000,
     connectTimeoutMS: 1800000, 
  });
