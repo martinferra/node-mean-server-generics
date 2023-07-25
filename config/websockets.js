@@ -77,7 +77,9 @@ function init(server) {
     console.log('Client connected');
     ws.on('message', (message) => {
       let incomingMessage = JSON.parse(message);
-      user ??= jwt.verify(incomingMessage.token, config.jwtSecret);
+      if(!user){
+        user = jwt.verify(incomingMessage.token, config.jwtSecret);
+      }
       if(!user) {
         ws.close(1, 'Access denied');
       } else {
