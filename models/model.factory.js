@@ -14,7 +14,23 @@ function registerModelSchema(name, schema) {
 }
 
 function registerModelPostCreation(name, fn) {
-    modelPostCreation.set(name, fn)
+    var fnOrArray = modelPostCreation.get(name);
+    if(fnOrArray) {
+        if(fnOrArray instanceof Array) {
+            fnOrArray.push(fn);
+        } else {
+            modelPostCreation.set(name, [fn, fnOrArray]);
+        }
+    } else {
+        modelPostCreation.set(name, fn);
+    }
+}
+
+function registerModelDiscriminator(name, schema, discriminator) {
+    registerModelPostCreation(
+        name, 
+        model=>model.discriminator(model.modelName+':'+discriminator, schema, discriminator)
+    )
 }
 
 function addMiddlewareEntry(schema, method, pathTail) {
@@ -42,7 +58,11 @@ function getModel(name, discriminator) {
             model = mongoose.model(fullName, schema, discriminator? fullName.toLowerCase(): undefined);
             let modelPostCreationFn = modelPostCreation.get(name);
             if(modelPostCreationFn) {
-                modelPostCreation(model);
+                if(modelPostCreationFn instanceof Array) {
+                    modelPostCreationFn.forEach(fn=>fn(model));
+                } else {
+                    modelPostCreationFn(model);
+                }
             }
         } else {
             throw new Error(`Model schema doesn't exist for model name '${name}'`);
@@ -51,4 +71,9 @@ function getModel(name, discriminator) {
     return model;
 }
 
-module.exports = { registerModelSchema, registerModelPostCreation, getModel }
+module.exports = {
+    registerModelSchema, 
+    registerModelPostCreation, 
+    registerModelDiscriminator,
+    getModel
+}
