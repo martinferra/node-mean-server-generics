@@ -8,7 +8,7 @@ function applyObjectIdRecursive(obj) {
     /* Ej: "customer: {$oid:'aaaaa'}" se reemplaza por 
         "customer: ObjectId('aaaaa')" */
     if(k==='$oid' && typeof o[k] === 'string') {
-      po[pk] = mongoose.Types.ObjectId(o[k]);
+      po[pk] = new mongoose.Types.ObjectId(o[k]);
     }
   })
 }
@@ -19,7 +19,7 @@ function applyMongooseTypesRecursive(obj) {
     /* Ej: "customer: {$oid:'aaaaa'}" se reemplaza por 
         "customer: ObjectId('aaaaa')" */
     if(k==='$oid' && typeof o[k] === 'string') {
-      po[pk] = mongoose.Types.ObjectId(o[k]);
+      po[pk] = new mongoose.Types.ObjectId(o[k]);
     } else if(k==='$date' && typeof o[k] === 'string') {
       po[pk] = new Date(o[k]);
     }
