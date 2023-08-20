@@ -7,19 +7,19 @@ function setReportSpec(reportId, reportSpec) {
     reportSpecs.set(reportId, reportSpec);
 }
 
-async function getReport(cb, reportId, ...params) {
+async function getReport(cb, reportId, user, ...params) {
     const spec = reportSpecs.get(reportId);
     switch(spec.reportType) {
         case 'excel':
-            return getExcelReport(cb, reportId, ...params);
+            return getExcelReport(cb, reportId, user, ...params);
         case 'txt':
-            return getTxtReport(cb, reportId, ...params);
+            return getTxtReport(cb, reportId, user, ...params);
         default:
             cb(null, null);
     }
 }
 
-async function getExcelReport(cb, reportId, ...params) {
+async function getExcelReport(cb, reportId, user, ...params) {
 
     const spec = reportSpecs.get(reportId);
     let buffer;
@@ -62,7 +62,7 @@ async function getExcelReport(cb, reportId, ...params) {
     }
 };
 
-async function getTxtReport(cb, reportId, ...params) {
+async function getTxtReport(cb, reportId, user, ...params) {
     const spec = reportSpecs.get(reportId);
     const getData = spec.getData;
     let buffer;
