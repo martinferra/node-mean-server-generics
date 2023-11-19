@@ -10,23 +10,23 @@ var subscriptionsByWs = new Map();
 var wss;
 
 async function rpcController(user, rpc, ws) {
-  let callback = websocketCallbacks.getCallback(rpc.name);
-  if(!callback) {
-    throw(`Error: websockets module -> on message callback -> command "${rpc.name}" doesn't exist`);
-  } else {
-    try {
-      let ret = await callback(Object.assign({}, rpc.params, {user}));
-      if(ret.constructor?.name === 'Object') {
-        ret = JSON.stringify(ret);
-      }
-      ws.send(ret);
-    } catch(e) {
-      ws.send({
-        type: 'error', 
-        data: e.message
-      });
+  const callback = websocketCallbacks.getCallback(rpc.name);
+  var ret;
+  try {
+    ret = callback?
+      (await callback(Object.assign({},rpc.params,{user}))) : 
+      `Error: websockets module -> on message callback -> command "${rpc.name}" doesn't exist`;
+    if(ret.constructor.name === 'Object') {
+      ret = JSON.stringify(ret);
     }
-  };
+  } catch(e) {
+    ret = {
+      type: 'error', 
+      data: e.message
+    }; 
+  } finally {
+    ws?.send(ret);
+  }
 }
 
 function subscriptionController(user, path, ws) {
