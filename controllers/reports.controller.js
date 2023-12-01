@@ -71,7 +71,7 @@ async function getExcelReport(cb, spec, user, ...params) {
             }];
             // -- Fill sheet data
             for(let dataRange of sheet.dataRanges) {
-                let excelData = await dataRange.getData(...params);
+                let excelData = await dataRange.getData(user, ...params);
                 excelData.forEach((doc, idx)=>{
                     Object.keys(doc).forEach(columnId=>{
                         worksheet.getCell(columnId+(dataRange.initialRowNum+idx)).value = doc[columnId]
@@ -103,7 +103,7 @@ async function getTxtReport(cb, spec, user, ...params) {
 
     try {
         buffer = spec.columnIds.join('\t')+'\n';
-        let txtData = await getData(...params);
+        let txtData = await getData(user, ...params);
         txtData.forEach((doc, idx)=>{
             spec.columnIds.forEach((columnId, idx)=>{
                 buffer += doc[columnId];
