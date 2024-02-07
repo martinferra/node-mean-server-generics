@@ -36,7 +36,9 @@ function registerModelDiscriminator(name, schema, discriminator) {
 function addMiddlewareEntry(schema, method, pathTail) {
     schema.post(method, function (doc) {
         let path = doc.constructor.collection.name.replace('_','/')+'/'+pathTail;
-        subscriptions.publish(path, doc);
+        let plainObj = doc.toObject();
+        plainObj._id = plainObj._id.toString();
+        subscriptions.publish(path, plainObj);
     });
 };
 

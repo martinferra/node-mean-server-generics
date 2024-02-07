@@ -4,38 +4,46 @@ const { Server } = require('ws');
 const subscriptions = require('../config/subscriptions');
 const serverProcs = require('./server-proccesses');
 const jwt = require('jsonwebtoken');
+const { BSON } = require('bson');
+const { preBSONSerialization } = require('../../../common/generic/commonFunctions');
 
 var subscriptionsByWs = new Map();
 
 var wss;
 
+function toBson(data, preProccessByDefault=true) {
+  return BSON.serialize(preBSONSerialization(data, preProccessByDefault));
+}
+
 async function rpcController(user, rpc, ws) {
   const callback = websocketCallbacks.getCallback(rpc.name);
-  var ret;
+  var callbackRet, objectToSend;
   try {
-    ret = callback?
+    callbackRet = callback?
       (await callback(Object.assign({},rpc.params,{user}))) : 
       `Error: websockets module -> on message callback -> command "${rpc.name}" doesn't exist`;
+    objectToSend = {
+      type: callback? (callbackRet.constructor.name === 'Object'? 'object' : 'no-object') : 'error',
+      payload: callbackRet
+    };
   } catch(e) {
-    ret = {
+    objectToSend = {
       type: 'error', 
-      data: e.message
+      payload: e.message
     }; 
   } finally {
-    if(ret.constructor.name === 'Object') {
-      ret = JSON.stringify(ret);
-    };
-    ws?.send(ret);
+    ws?.send(toBson(objectToSend));
   }
 }
 
 function subscriptionController(user, path, ws) {
 
   let callback = (data) => {
-    if(typeof data === 'object') {
-      data = JSON.stringify({data});
-    }
-    ws.send(data);
+    let objectToSend = {
+      type: data.constructor.name === 'Object'? 'object' : 'no-object',
+      payload: data
+    };
+    ws.send(toBson(objectToSend, false));
   }
 
   subscriptionsByWs.set(ws,{path, callback});
@@ -52,7 +60,7 @@ function keepAliveController(user, spec, ws) {
 }
 
 function sendKeepAlive(user, ws, timeOut) {
-  ws.send(JSON.stringify({type: 'keepAlive', data:{timeOut}}));
+  ws.send(toBson({type: 'keepAlive', payload:{timeOut}}, false));
 }
 
 function messageController(user, incomingMessage, ws) {
@@ -81,7 +89,6 @@ function init(server) {
   wss = new Server({ server: server });
   wss.on('connection', (ws) => {
     var user;
-    console.log('Client connected');
     ws.on('message', (message) => {
       let incomingMessage = JSON.parse(message);
       if(!user){

@@ -11,15 +11,15 @@ function setReportSpec(reportId, reportSpec) {
     reportSpecs.set(reportId, reportSpec);
 }
 
-async function getReport(cb, reportId, user, ...params) {
-    var spec = reportSpecs.get(reportId);
+async function getReport(reportParams) {
+    var spec = reportSpecs.get(reportParams.reportId);
     if(spec.getSpec) {
-        spec = await spec.getSpec(...params);
+        spec = await spec.getSpec(...reportParams.params);
     }
     if(spec.specArray) {
-        return getReportsGroup(cb, spec, user, ...params);
+        return getReportsGroup(null, spec, reportParams.user, ...reportParams.params);
     }
-    return getSingleReport(cb, spec, user, ...params);
+    return getSingleReport(null, spec, reportParams.user, ...reportParams.params);
 }
 
 async function getExcelReport(cb, spec, user, ...params) {
@@ -176,18 +176,9 @@ async function getReportsGroup(cb, spec, user, ...params) {
     }
 }
 
-websocketCallbacks.setCallback('getReport', async (data) => {
-    try {
-        let report = await getReport(
-            null, 
-            data.reportId, 
-            data.user, 
-            ...data.reportParams
-        );
-        return report;
-    } catch(e) {
-        return {type: 'error', data:e.message};
-    }
-})
+websocketCallbacks.setCallback('getReport', getReport);
 
-module.exports = {setReportSpec, getReport}
+module.exports = {
+    setReportSpec, 
+    getReport
+}
