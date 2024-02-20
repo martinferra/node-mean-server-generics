@@ -11,15 +11,15 @@ function setReportSpec(reportId, reportSpec) {
     reportSpecs.set(reportId, reportSpec);
 }
 
-async function getReport(reportParams) {
-    var spec = reportSpecs.get(reportParams.reportId);
+async function getReport(reportReq) {
+    var spec = reportSpecs.get(reportReq.reportId);
     if(spec.getSpec) {
-        spec = await spec.getSpec(...reportParams.params);
+        spec = await spec.getSpec(...reportReq.reportParams);
     }
     if(spec.specArray) {
-        return getReportsGroup(null, spec, reportParams.user, ...reportParams.params);
+        return getReportsGroup(null, spec, reportReq.user, ...reportReq.reportParams);
     }
-    return getSingleReport(null, spec, reportParams.user, ...reportParams.params);
+    return getSingleReport(null, spec, reportReq.user, ...reportReq.reportParams);
 }
 
 async function getExcelReport(cb, spec, user, ...params) {
