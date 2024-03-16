@@ -78,9 +78,9 @@ function globalPlugin(schema, options) {
                     }
             
                     switch(this.paths[path].constructor.name) {
-                        case 'SingleNestedPath': fnObj[path] = saveChildrenInvoker(this.paths[path].schema, obj[path]); break;
-                        case 'DocumentArrayPath': fnObj[path] = saveChildrenForArrayInvoker(this.paths[path].schema, obj[path]); break;
-                        case 'ObjectId': fnObj[path] = saveDocumentInvoker(this.tree[path].ref, obj[path]); break;
+                        case 'SchemaSubdocument': fnObj[path] = saveChildrenInvoker(this.paths[path].schema, obj[path]); break;
+                        case 'SchemaDocumentArray': fnObj[path] = saveChildrenForArrayInvoker(this.paths[path].schema, obj[path]); break;
+                        case 'SchemaObjectId': fnObj[path] = saveDocumentInvoker(this.tree[path].ref, obj[path]); break;
                         case 'SchemaArray': fnObj[path] = this.tree[path]?.[0]?.ref?
                                 saveDocumentArrayInvoker(this.tree[path][0].ref, obj[path]) :
                                 identityFnInvoker(obj[path]);

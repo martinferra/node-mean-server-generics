@@ -157,7 +157,7 @@ function getCtrlSaveFn(schema) {
             console.error(validation.error);
             return validation.error
         }
-        return await model.saveDocument(data);
+        return await model.saveDocument(validation.value);
     }
 }
 
