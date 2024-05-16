@@ -1,7 +1,7 @@
-const getRouter = require('./router.factory');
+const { getRouterByModel } = require('./router.factory');
 const registrationReqSchema = require('../schemas/registration-req.schema');
 
-const registrationReqRoutes = getRouter(
+const registrationReqRoutes = getRouterByModel(
   'RegistrationReq',
   registrationReqSchema
 );

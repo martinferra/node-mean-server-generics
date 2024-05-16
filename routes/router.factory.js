@@ -2,10 +2,9 @@ const express = require('express');
 const passport = require('passport');
 const asyncHandler = require('express-async-handler');
 const controllerFactory = require('../controllers/controller.factory');
-const config = require('../../config/config');
 const modelFactory = require('../models/model.factory');
 
-function getRouter(modelName, schema, customRoutes = null, discByUser = false) {
+function getBaseRouter(discByUser = false) {
 
     router = express.Router();
 
@@ -23,6 +22,13 @@ function getRouter(modelName, schema, customRoutes = null, discByUser = false) {
         }
         return next();
     });
+
+    return router;
+}
+
+function getRouterByModel(modelName, schema, customRoutes = null, discByUser = false) {
+
+    router = getBaseRouter(discByUser);
 
     /* Las funciones "Wrapper" cuando están definidas, tienen como 
     objetivo extender el comportamiento de las funciones estándar */
@@ -229,4 +235,7 @@ function getRtrCountFn(modelName, wrapperFn = null) {
     };
 }
 
-module.exports = getRouter
+module.exports = {
+    getBaseRouter,
+    getRouterByModel,
+}

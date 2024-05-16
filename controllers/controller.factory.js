@@ -175,7 +175,7 @@ function getCtrlRemoveFn() {
 
 function getCtrlRemoveByIdFn() {
     return async function removeById(model, id) {
-        return await model.findByIdAndRemove(id).exec();
+        return await model.findByIdAndDelete(id).exec();
     }
 }
 
