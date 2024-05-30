@@ -6,7 +6,6 @@ const getTimestampString = require('../../../common/generic/commonFunctions').ge
 const async = require('async');
 const tmp = require('tmp-promise');
 const path = require('path');
-const logMemoryUsage = require('../../../common/generic/commonFunctions').logMemoryUsage;
 
 var reportSpecs = new Map();
 
@@ -112,16 +111,7 @@ async function getExcelReport(cb, spec, user, ...params) {
             }];
             // -- Fill sheet data
             for(let dataRange of sheet.dataRanges) {
-                logMemoryUsage('Before getData');
                 let excelData = await dataRange.getData(user, ...params);
-                logMemoryUsage('After getData');
-                /* excelData.forEach(async (doc, idx)=>{
-                    Object.keys(doc).forEach(columnId=>{
-                        worksheetWriter.getCell(columnId+(dataRange.initialRowNum+idx)).value = doc[columnId]
-                    })
-                    // Commit the row as soon as it is processed
-                    await worksheetWriter.commitRow(dataRange.initialRowNum+idx);
-                }); */
                 for(let i = 0; i < excelData.length; i++) {
                     Object.keys(excelData[i]).forEach(columnId=>{
                         worksheetWriter.getCell(columnId+(dataRange.initialRowNum+i)).value = excelData[i][columnId]
