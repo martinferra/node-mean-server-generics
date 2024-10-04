@@ -7,7 +7,10 @@ var modelPostCreation = new Map();
 function registerModelSchema(name, schema) {
     modelSchemas.set(name, schema);
     addMiddleware(schema);
-    if(!schema.statics.useDiscriminators) {
+    if(
+        !schema.statics.useDiscriminators && 
+        !schema.options.discriminatorKey
+    ) {
         return getModel(name);
     }
     return;
