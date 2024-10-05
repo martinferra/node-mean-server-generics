@@ -2,7 +2,7 @@ const config = require('../../config/config');
 const websocketCallbacks = require('./websocket-callbacks');
 const { Server } = require('ws');
 const subscriptions = require('../config/subscriptions');
-const serverProcs = require('./server-proccesses');
+const serverProcs = require('./server-processes');
 const jwt = require('jsonwebtoken');
 const { BSON } = require('bson');
 const { preBSONSerialization } = require('../../../common/generic/commonFunctions');
@@ -11,8 +11,8 @@ var subscriptionsByWs = new Map();
 
 var wss;
 
-function toBson(data, preProccessByDefault=true) {
-  return BSON.serialize(preBSONSerialization(data, preProccessByDefault));
+function toBson(data, preProcessByDefault=true) {
+  return BSON.serialize(preBSONSerialization(data, preProcessByDefault));
 }
 
 async function rpcController(user, rpc, ws) {
@@ -105,4 +105,4 @@ function init(server) {
   });
 }
 
-serverProcs.setProccess('websockets', init);
+serverProcs.setProcess('websockets', init);

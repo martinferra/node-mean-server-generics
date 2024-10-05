@@ -1,4 +1,4 @@
-const serverProcs = require('./server-proccesses');
+const serverProcs = require('./server-processes');
 const memoryUsage = require('../../../common/generic/commonFunctions').logMemoryUsage;
 
 function init(server) {
@@ -7,4 +7,4 @@ function init(server) {
     }, 1000);
 }
 
-serverProcs.setProccess('memory-usage', init);
+serverProcs.setProcess('memory-usage', init);

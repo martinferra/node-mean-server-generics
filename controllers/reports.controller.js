@@ -103,7 +103,7 @@ async function getExcelReport(cb, spec, user, ...params) {
                 worksheetWriter.getCell(param.cell).value = await param.getValue(...params);
             }
 
-            // Proccess data ranges
+            // Process data ranges
             // -- Backward compatibility
             sheet.dataRanges ??= [{
                 getData: sheet.getData,
