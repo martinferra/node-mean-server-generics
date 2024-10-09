@@ -68,6 +68,10 @@ async function getExcelReport(cb, spec, user, ...params) {
                     // Clone cell properties
                     templateRow.eachCell({ includeEmpty: true }, (templateCell, colNumber) => {
 
+                        // Clone row height
+                        const newRow = worksheetWriter.getRow(rowNumber);
+                        newRow.height = templateRow.height;
+
                         // Clone merged cells
                         if (templateCell.isMerged && templateCell.master.address === templateCell.address) {
                             const mergeRange = templateWorksheet._merges[templateCell.master.address];
