@@ -83,7 +83,9 @@ async function basicQueryFind(queryParams, createCb, postCb, cb) {
     if(postCb) query = postCb(query);
 
     if(cb) {
-        query.exec().then(data=>cb(null, data));
+        query.exec()
+            .then(data=>cb(null, data))
+            .catch(err=>cb(err));
         return;
     } else {
         return await query.exec();
