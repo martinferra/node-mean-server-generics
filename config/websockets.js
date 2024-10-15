@@ -91,13 +91,16 @@ function init(server) {
     var user;
     ws.on('message', (message) => {
       let incomingMessage = JSON.parse(message);
-      if(!user){
-        user = jwt.verify(incomingMessage.token, config.jwtSecret);
-      }
-      if(!user) {
-        ws.close(1, 'Access denied');
-      } else {
-        messageController(user, incomingMessage, ws);
+      try {
+        user ??= jwt.verify(incomingMessage.token, config.jwtSecret);
+      } catch(e) {
+        console.log('Error: websockets module -> on message -> jwt verification error');
+      } finally {
+        if(!user) {
+          ws.close(1, 'Access denied');
+        } else {
+          messageController(user, incomingMessage, ws);
+        }
       }
     });
     ws.on('close', () => closeController(ws));
