@@ -174,15 +174,44 @@ async function getTxtReport(cb, spec, user, ...params) {
     }
 }
 
+async function getPdfReport(cb, spec, user, ...params) {
+    const getData = spec.getData;
+    var buffer;
+    let error = null;
+
+    try {
+        buffer = await getData(user, ...params);
+    } catch(e) {
+        error = e;
+    } finally {
+        if(cb) {
+            cb(error, error? null : buffer)
+        } else {
+            if(error) {
+                throw(error);
+            }
+            return buffer;
+        }
+    }
+}
+
 async function getSingleReport(cb, spec, user, ...params) {
+    var getReport;
     switch(spec.reportType) {
         case 'excel':
-            return getExcelReport(cb, spec, user, ...params);
+            getReport = getExcelReport;
+            break;
         case 'txt':
-            return getTxtReport(cb, spec, user, ...params);
+            getReport = getTxtReport;
+            break;
+        case 'pdf':
+            getReport = getPdfReport;
+            break;
         default:
             cb?.(null, null);
+            return null;
     }
+    return getReport(cb, spec, user, ...params);
 }
 
 async function getReportsGroup(cb, spec, user, ...params) {
