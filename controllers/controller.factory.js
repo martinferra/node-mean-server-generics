@@ -113,21 +113,24 @@ function getCtrlFindWithPaginationFn() {
         let skipValue = params.pagParams.pageNumber && !(lastValue && lastId)? params.pagParams.pageNumber : 0;
         let pageSize = params.pagParams.pageSize;
 
-        let paginationFilter = (lastValue && lastId)? { 
-            '$or': [ 
-                { [sortField]: { [sortOperator]: lastValue } }, 
-                {
-                    [sortField]: lastValue, 
-                    '_id': { [sortOperator]: new mongoose.Types.ObjectId(lastId) } 
-                } 
-            ] 
-        } : null;
-
         let paginationPipelineArr = [];
-        
-        if(paginationFilter) {
+
+        if (lastValue && lastId) { 
+            let paginationFilter;
+            let value = model.schema.paths[sortField].instance === 'Date'?
+                new Date(lastValue) : 
+                lastValue;
+            paginationFilter = { 
+                '$or': [ 
+                    { [sortField]: { [sortOperator]: value } }, 
+                    {
+                        [sortField]: value, 
+                        '_id': { [sortOperator]: new mongoose.Types.ObjectId(lastId) } 
+                    } 
+                ]
+            };
             paginationPipelineArr.push({ $match: paginationFilter });
-        };
+        }
 
         paginationPipelineArr = paginationPipelineArr.concat([
             { $sort: { [sortField]: firstSortDirection, _id: firstSortDirection } },
