@@ -68,20 +68,19 @@ async function sendMail(mailParams) {
   }
   try {
     mailParams.from = mailParams.from.replace('[from]',mailFrom);
-    /* transporterPromise.then(transporter => {
+    transporterPromise.then(transporter => {
       try {
         transporter.sendMail(mailParams, (error, info) => {
           if (error) {
-            console.error('Error occurred:', error);
+            console.error('Error sending mail:', error);
             return;
           }
           console.log('Email sent:', info.response);
         });
       } catch (error) {
-        console.error('Caught error:', error);
+        console.error('Error sending mail:', error);
       }
-    }); */
-    transporterPromise.then(transporter => transporter.sendMail(mailParams));
+    });
   } catch (error) {
     console.error('Error sending mail:', error);
   }
