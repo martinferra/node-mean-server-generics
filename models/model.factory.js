@@ -48,6 +48,7 @@ function addMiddlewareEntry(schema, method, pathTail) {
 function addMiddleware(schema) {
     addMiddlewareEntry(schema, 'save', 'new');
     addMiddlewareEntry(schema, 'findOneAndUpdate', 'update');
+    addMiddlewareEntry(schema, 'findOneAndDelete', 'remove');
     addMiddlewareEntry(schema, 'findOneAndRemove', 'remove');
 };
 
