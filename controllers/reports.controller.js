@@ -103,6 +103,16 @@ async function getExcelReport(cb, spec, user, ...params) {
                 });
             }
 
+            // Set page setup options
+            if (sheet.pageSetup || spec.pageSetup) {
+                const pageSetup = { ...spec.pageSetup, ...sheet.pageSetup };
+                worksheetWriter.pageSetup = {
+                    paperSize: pageSetup.paperSize,
+                    orientation: pageSetup.orientation,
+                    ...pageSetup
+                };
+            }
+
             // Sheet paraters assignment
             for(let param of sheet.params || []) {
                 worksheetWriter.getCell(param.cell).value = await param.getValue(...params);
