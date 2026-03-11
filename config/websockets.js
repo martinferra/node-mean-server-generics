@@ -37,8 +37,9 @@ async function rpcController(user, rpc, ws) {
 }
 
 function subscriptionController(user, path, ws) {
-
+  /* Websocket debugging */ console.log('subscriptionController', path);
   let callback = (data) => {
+    /* Websocket debugging */ console.log('subscription callback', data);
     let objectToSend = {
       type: data.constructor.name === 'Object'? 'object' : 'no-object',
       payload: data
@@ -64,6 +65,7 @@ function sendKeepAlive(user, ws, timeOut) {
 }
 
 function messageController(user, incomingMessage, ws) {
+  /* Websocket debugging */ console.log('messageController', incomingMessage);
   switch(incomingMessage.type) {
     case 'rpc':
       rpcController(user, incomingMessage.spec, ws);
@@ -91,12 +93,14 @@ function init(server) {
     var user;
     ws.on('message', (message) => {
       let incomingMessage = JSON.parse(message);
+      /* Websocket debugging */ console.log('On message', incomingMessage);
       try {
         user ??= jwt.verify(incomingMessage.token, config.jwtSecret);
       } catch(e) {
         console.log('Error: websockets module -> on message -> jwt verification error');
       } finally {
         if(!user) {
+          /* Websocket debugging */ console.log('Websocket connection denied: no user identified');
           ws.close(1, 'Access denied');
         } else {
           messageController(user, incomingMessage, ws);
