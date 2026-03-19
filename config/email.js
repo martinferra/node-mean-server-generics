@@ -52,7 +52,10 @@ if (!oauth2ConfigSchema.validate(config.email?.oauth2?.alarms).error) {
         accessToken: accessToken.token,
       }
     })
-  )
+  ).catch(err => {
+    console.error('Failed to initialize OAuth2 mail transporter:', err.message);
+    return null;
+  });
   mailFrom = oauth2Config.user;
 } else if (!smtpConfigSchema.validate(config.email?.smtp?.alarms).error) {
   transporterPromise = Promise.resolve(nodemailer.createTransport(config.email.smtp.alarms));
@@ -67,19 +70,18 @@ async function sendMail(mailParams) {
     return;
   }
   try {
-    mailParams.from = mailParams.from.replace('[from]',mailFrom);
-    transporterPromise.then(transporter => {
-      try {
-        transporter.sendMail(mailParams, (error, info) => {
-          if (error) {
-            console.error('Error sending mail:', error);
-            return;
-          }
-          console.log('Email sent:', info.response);
-        });
-      } catch (error) {
+    const transporter = await transporterPromise;
+    if (!transporter) {
+      console.error('Mail transporter is unavailable (initialization failed)');
+      return;
+    }
+    mailParams.from = mailParams.from.replace('[from]', mailFrom);
+    transporter.sendMail(mailParams, (error, info) => {
+      if (error) {
         console.error('Error sending mail:', error);
+        return;
       }
+      console.log('Email sent:', info.response);
     });
   } catch (error) {
     console.error('Error sending mail:', error);
